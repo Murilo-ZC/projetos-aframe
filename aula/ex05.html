@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFrame - Troca de Cenas e Sky com Imagens</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+</head>
+<body>
+    <!-- Cena 1: Cena Inicial com Sky Colorido -->
+    <a-scene id="cena1">
+        <a-camera position="0 1.6 0">
+            <a-cursor></a-cursor>
+        </a-camera>
+        
+        <!-- Texto de boas-vindas -->
+        <a-text 
+            value="Cena 1: Clique no cubo para mudar!" 
+            position="0 2.5 -3" 
+            align="center"
+            color="#FFFFFF"
+            scale="1.5 1.5 1.5">
+        </a-text>
+        
+        <!-- Cubo clicável que muda de cena -->
+        <a-box 
+            id="botaoTroca"
+            position="0 1 -3" 
+            rotation="0 45 0" 
+            color="#FF5733"
+            animation="property: rotation; to: 0 405 0; loop: true; dur: 2000"
+            shadow>
+        </a-box>
+        
+        <!-- Label explicativa -->
+        <a-text 
+            value="Clique aqui" 
+            position="0 0.3 -3" 
+            align="center"
+            color="#FFFFFF"
+            background-color="#000000"
+            padding="0.2">
+        </a-text>
+        
+        <!-- Chão -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="10" 
+            height="10" 
+            color="#7BC8A4"
+            shadow>
+        </a-plane>
+        
+        <!-- Sky com cor sólida (azul claro) -->
+        <a-sky color="#87CEEB"></a-sky>
+        
+        <!-- Iluminação -->
+        <a-light type="ambient" color="#404040"></a-light>
+        <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
+    </a-scene>
+    
+    <!-- Cena 2: Cena com Sky usando Imagem -->
+    <a-scene id="cena2" style="display: none;">
+        <a-camera position="0 1.6 0">
+            <a-cursor></a-cursor>
+        </a-camera>
+        
+        <!-- Texto de boas-vindas -->
+        <a-text 
+            value="Cena 2: Clique no cubo para voltar!" 
+            position="0 2.5 -3" 
+            align="center"
+            color="#FFFFFF"
+            scale="1.5 1.5 1.5">
+        </a-text>
+        
+        <!-- Cubo clicável que volta para cena 1 -->
+        <a-box 
+            id="botaoVolta"
+            position="0 3 -3" 
+            rotation="0 45 0" 
+            color="#33FF57"
+            animation="property: rotation; to: 0 405 0; loop: true; dur: 2000"
+            shadow>
+        </a-box>
+        
+        <!-- Label explicativa -->
+        <a-text 
+            value="Clique para voltar" 
+            position="0 0.3 -3" 
+            align="center"
+            color="#FFFFFF"
+            background-color="#000000"
+            padding="0.2">
+        </a-text>
+        
+        <!-- Chão -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="10" 
+            height="10" 
+            color="#8B4513"
+            shadow>
+        </a-plane>
+        
+        <!-- Sky com imagem de fundo -->
+        <!-- Usando uma imagem de exemplo (você pode substituir por qualquer URL de imagem) -->
+        <a-sky src="https://cdn.aframe.io/360-image-guide/panorama/puydesancy.jpg"></a-sky>
+        
+        <!-- Iluminação -->
+        <a-light type="ambient" color="#404040"></a-light>
+        <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
+    </a-scene>
+    
+    <script>
+        // Variável para controlar qual cena está ativa
+        let cenaAtual = 1;
+        
+        // Função para trocar de cena
+        function trocarCena() {
+            const cena1 = document.getElementById('cena1');
+            const cena2 = document.getElementById('cena2');
+            
+            if (cenaAtual === 1) {
+                // Esconde cena 1 e mostra cena 2
+                cena1.style.display = 'none';
+                cena2.style.display = 'block';
+                cenaAtual = 2;
+            } else {
+                // Esconde cena 2 e mostra cena 1
+                cena2.style.display = 'none';
+                cena1.style.display = 'block';
+                cenaAtual = 1;
+            }
+        }
+        
+        // Adiciona evento de clique no cubo da cena 1
+        document.querySelector('#botaoTroca').addEventListener('click', function() {
+            trocarCena();
+        });
+        
+        // Adiciona evento de clique no cubo da cena 2
+        document.querySelector('#botaoVolta').addEventListener('click', function() {
+            trocarCena();
+        });
+    </script>
+</body>
+</html>

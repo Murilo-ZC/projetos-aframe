@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFrame - Texto 3D</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+</head>
+<body>
+    <a-scene>
+        <a-camera position="0 1.6 0"></a-camera>
+        
+        <!-- Texto 3D principal -->
+        <a-text 
+            value="Bem-vindo ao VR!" 
+            position="0 2.5 -3" 
+            align="center"
+            color="#FF5733"
+            scale="2 2 2">
+        </a-text>
+        
+        <!-- Label para o cubo -->
+        <a-text 
+            value="Cubo" 
+            position="-2 1.5 -3" 
+            align="center"
+            color="#FFFFFF"
+            background-color="#000000"
+            padding="0.2">
+        </a-text>
+        <a-box 
+            position="-2 1 -3" 
+            color="#FF5733"
+            shadow>
+        </a-box>
+        
+        <!-- Label para a esfera -->
+        <a-text 
+            value="Esfera" 
+            position="0 1.5 -3" 
+            align="center"
+            color="#FFFFFF"
+            background-color="#000000"
+            padding="0.2">
+        </a-text>
+        <a-sphere 
+            position="0 1 -3" 
+            radius="0.5"
+            color="#33FF57"
+            shadow>
+        </a-sphere>
+        
+        <!-- Label para o cilindro -->
+        <a-text 
+            value="Cilindro" 
+            position="2 1.5 -3" 
+            align="center"
+            color="#FFFFFF"
+            background-color="#000000"
+            padding="0.2">
+        </a-text>
+        <a-cylinder 
+            position="2 1 -3" 
+            radius="0.5" 
+            height="1"
+            color="#3357FF"
+            shadow>
+        </a-cylinder>
+        
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="10" 
+            height="10" 
+            color="#7BC8A4"
+            shadow>
+        </a-plane>
+        
+        <a-sky color="#87CEEB"></a-sky>
+        <a-light type="ambient" color="#404040"></a-light>
+        <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
+    </a-scene>
+</body>
+</html>
+

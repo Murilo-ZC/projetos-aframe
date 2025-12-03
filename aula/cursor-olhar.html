@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFrame - Cursor que Acompanha o Olhar</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+        .info-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            z-index: 999;
+            max-width: 300px;
+        }
+        .info-panel h3 {
+            margin: 0 0 10px 0;
+            color: #4FC3F7;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-panel">
+        <h3>🎯 Cursor de Olhar</h3>
+        <p>Mova a câmera para apontar o cursor (círculo) para os objetos. 
+           O cursor muda de cor ao passar sobre eles!</p>
+    </div>
+
+    <a-scene>
+        <!-- Câmera com cursor integrado -->
+        <a-camera position="0 1.6 0">
+            <!-- Cursor circular que acompanha o olhar -->
+            <a-entity 
+                cursor="fuse: true; fuseTimeout: 1500"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: white; shader: flat"
+                animation__click="property: scale; startEvents: click; easing: easeInCubic; dur: 150; from: 0.1 0.1 0.1; to: 1 1 1"
+                animation__fusing="property: scale; startEvents: fusing; easing: easeInCubic; dur: 1500; from: 1 1 1; to: 0.1 0.1 0.1"
+                animation__mouseleave="property: scale; startEvents: mouseleave; easing: easeInCubic; dur: 500; to: 1 1 1"
+                raycaster="objects: .interativo">
+            </a-entity>
+        </a-camera>
+
+        <!-- Objetos interativos -->
+        
+        <!-- Cubo vermelho -->
+        <a-box 
+            class="interativo"
+            position="-2 1.5 -4" 
+            color="#E91E63"
+            animation__mouseenter="property: scale; to: 1.2 1.2 1.2; startEvents: mouseenter; dur: 300"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300"
+            animation__click="property: rotation; to: 0 360 0; startEvents: click; dur: 500">
+        </a-box>
+
+        <!-- Esfera verde -->
+        <a-sphere 
+            class="interativo"
+            position="0 1.5 -4" 
+            radius="0.6"
+            color="#4CAF50"
+            animation__mouseenter="property: scale; to: 1.3 1.3 1.3; startEvents: mouseenter; dur: 300"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300"
+            animation__click="property: color; to: #FFEB3B; startEvents: click; dur: 200">
+        </a-sphere>
+
+        <!-- Cilindro azul -->
+        <a-cylinder 
+            class="interativo"
+            position="2 1 -4" 
+            radius="0.5" 
+            height="1.5"
+            color="#2196F3"
+            animation__mouseenter="property: scale; to: 1.2 1.2 1.2; startEvents: mouseenter; dur: 300"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300"
+            animation__click="property: position; to: 2 2 -4; startEvents: click; dur: 300">
+        </a-cylinder>
+
+        <!-- Torus roxo -->
+        <a-torus 
+            class="interativo"
+            position="0 2.5 -5" 
+            radius="0.5"
+            radius-tubular="0.1"
+            color="#9C27B0"
+            rotation="90 0 0"
+            animation__rotate="property: rotation; to: 90 360 0; loop: true; dur: 4000; easing: linear"
+            animation__mouseenter="property: scale; to: 1.4 1.4 1.4; startEvents: mouseenter; dur: 300"
+            animation__mouseleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 300">
+        </a-torus>
+
+        <!-- Chão -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="12" 
+            height="12" 
+            color="#455A64">
+        </a-plane>
+
+        <!-- Céu gradiente -->
+        <a-sky color="#1A237E"></a-sky>
+        
+        <!-- Iluminação -->
+        <a-light type="ambient" color="#555"></a-light>
+        <a-light type="directional" position="2 4 1" intensity="0.8" color="#FFF"></a-light>
+        <a-light type="point" position="0 3 -3" intensity="0.5" color="#4FC3F7"></a-light>
+    </a-scene>
+
+    <script>
+        // Adiciona feedback visual quando o cursor entra/sai dos objetos
+        document.querySelectorAll('.interativo').forEach(function(el) {
+            el.addEventListener('mouseenter', function() {
+                // Muda a cor do cursor para ciano quando sobre um objeto
+                document.querySelector('[cursor]').setAttribute('material', 'color', '#00FFFF');
+            });
+            
+            el.addEventListener('mouseleave', function() {
+                // Volta a cor do cursor para branco
+                document.querySelector('[cursor]').setAttribute('material', 'color', 'white');
+            });
+            
+            el.addEventListener('click', function() {
+                console.log('Objeto clicado:', this.tagName);
+            });
+        });
+    </script>
+</body>
+</html>
+

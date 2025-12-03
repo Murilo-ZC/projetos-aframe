@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFrame - Jogo de Tiro v2</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+</head>
+<body>
+    <a-scene>
+        <!-- Câmera com cursor -->
+        <a-camera position="0 1.6 0">
+            <!-- Cursor -->
+            <a-entity 
+                id="cursor"
+                cursor="fuse: true; fuseTimeout: 400"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: white; shader: flat"
+                animation__fusing="property: scale; startEvents: fusing; dur: 400; from: 1 1 1; to: 0.3 0.3 0.3"
+                animation__leave="property: scale; startEvents: mouseleave; dur: 200; to: 1 1 1"
+                raycaster="objects: .clicavel; autoRefresh: true">
+            </a-entity>
+
+            <!-- Placar (acompanha a câmera) -->
+            <a-text 
+                id="placar"
+                value=""
+                position="0 0.4 -1"
+                align="center"
+                width="2"
+                color="white">
+            </a-text>
+        </a-camera>
+
+        <!-- Tela de início (no mundo 3D, em frente ao jogador) -->
+        <a-entity id="telaInicio" position="0 1.6 -3">
+            <a-text 
+                value="JOGO DE TIRO"
+                position="0 0.5 0"
+                align="center"
+                width="6"
+                color="#FFD700">
+            </a-text>
+            <a-box
+                id="btnIniciar"
+                class="clicavel"
+                width="1.2"
+                height="0.4"
+                depth="0.1"
+                color="#4CAF50"
+                position="0 0 0">
+            </a-box>
+            <a-text 
+                value="INICIAR"
+                position="0 0 0.06"
+                align="center"
+                width="4"
+                color="white">
+            </a-text>
+        </a-entity>
+
+        <!-- Tela de vitória (no mundo 3D) -->
+        <a-entity id="telaVitoria" position="0 1.6 -3" visible="false">
+            <a-text 
+                value="VOCE VENCEU!"
+                position="0 0.5 0"
+                align="center"
+                width="6"
+                color="#FFD700">
+            </a-text>
+            <a-box
+                id="btnReiniciar"
+                class="clicavel"
+                width="1.5"
+                height="0.4"
+                depth="0.1"
+                color="#2196F3"
+                position="0 0 0">
+            </a-box>
+            <a-text 
+                value="JOGAR NOVAMENTE"
+                position="0 0 0.06"
+                align="center"
+                width="4"
+                color="white">
+            </a-text>
+        </a-entity>
+
+        <!-- Container dos alvos -->
+        <a-entity id="alvos"></a-entity>
+
+        <!-- Plano (chão) -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="20" 
+            height="20" 
+            color="#2E7D32">
+        </a-plane>
+
+        <!-- Céu -->
+        <a-sky color="#1A237E"></a-sky>
+
+        <!-- Iluminação -->
+        <a-light type="ambient" color="#444"></a-light>
+        <a-light type="directional" position="1 4 1" intensity="0.8"></a-light>
+    </a-scene>
+
+    <script>
+        let pontos = 0;
+        let jogoAtivo = false;
+        let intervaloAlvos = null;
+
+        const placar = document.querySelector('#placar');
+        const telaInicio = document.querySelector('#telaInicio');
+        const telaVitoria = document.querySelector('#telaVitoria');
+        const btnIniciar = document.querySelector('#btnIniciar');
+        const btnReiniciar = document.querySelector('#btnReiniciar');
+        const alvosContainer = document.querySelector('#alvos');
+        const cursorEl = document.querySelector('#cursor');
+
+        const cores = ['#E91E63', '#FF5722', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'];
+        const formas = ['box', 'sphere', 'cone', 'dodecahedron'];
+
+        // Cria um alvo que cai do céu
+        function criarAlvo() {
+            if (!jogoAtivo) return;
+
+            const forma = formas[Math.floor(Math.random() * formas.length)];
+            const cor = cores[Math.floor(Math.random() * cores.length)];
+            
+            // Posição inicial no céu
+            const x = (Math.random() - 0.5) * 10;  // -5 a 5
+            const yInicio = 6 + Math.random() * 2; // 6 a 8 (alto no céu)
+            const z = -3 - Math.random() * 6;      // -3 a -9
+            
+            // Tempo de queda (mais lento = mais fácil)
+            const tempoQueda = 3000 + Math.random() * 2000; // 3 a 5 segundos
+
+            const alvo = document.createElement('a-entity');
+            alvo.setAttribute('class', 'alvo clicavel');
+            alvo.setAttribute('geometry', `primitive: ${forma}; radius: 0.4`);
+            alvo.setAttribute('material', `color: ${cor}`);
+            alvo.setAttribute('position', `${x} ${yInicio} ${z}`);
+            alvo.setAttribute('animation__queda', `property: position; to: ${x} 0 ${z}; dur: ${tempoQueda}; easing: linear`);
+            alvo.setAttribute('animation__rotacao', 'property: rotation; to: 360 360 0; loop: true; dur: 2000');
+
+            // Evento de clique (acerto)
+            alvo.addEventListener('click', function() {
+                if (!jogoAtivo) return;
+                
+                // Remove o alvo
+                this.parentNode.removeChild(this);
+                
+                // Adiciona ponto
+                pontos++;
+                placar.setAttribute('value', 'Pontos: ' + pontos + ' / 10');
+
+                // Verifica vitória
+                if (pontos >= 10) {
+                    vencer();
+                }
+            });
+
+            // Remove quando chegar ao chão (sem pontos)
+            alvo.addEventListener('animationcomplete__queda', function() {
+                if (this.parentNode) {
+                    this.parentNode.removeChild(this);
+                }
+            });
+
+            alvosContainer.appendChild(alvo);
+            
+            // Força o raycaster a atualizar para detectar o novo alvo
+            cursorEl.components.raycaster.refreshObjects();
+        }
+
+        // Inicia o jogo
+        function iniciarJogo() {
+            pontos = 0;
+            jogoAtivo = true;
+            
+            telaInicio.setAttribute('visible', 'false');
+            telaVitoria.setAttribute('visible', 'false');
+            placar.setAttribute('value', 'Pontos: 0 / 10');
+
+            // Limpa alvos antigos
+            alvosContainer.innerHTML = '';
+
+            // Cria alvos periodicamente
+            intervaloAlvos = setInterval(criarAlvo, 1000);
+            
+            // Cria alguns alvos iniciais
+            criarAlvo();
+            criarAlvo();
+        }
+
+        // Vitória
+        function vencer() {
+            jogoAtivo = false;
+            clearInterval(intervaloAlvos);
+            
+            // Remove alvos restantes
+            alvosContainer.innerHTML = '';
+            
+            telaVitoria.setAttribute('visible', 'true');
+            placar.setAttribute('value', 'PARABENS! 10 pontos!');
+        }
+
+        // Eventos dos botões
+        btnIniciar.addEventListener('click', iniciarJogo);
+        btnReiniciar.addEventListener('click', iniciarJogo);
+    </script>
+</body>
+</html>

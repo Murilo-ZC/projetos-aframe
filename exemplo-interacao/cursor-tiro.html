@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AFrame - Jogo de Tiro com Cursor</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+</head>
+<body>
+    <a-scene>
+        <!-- Câmera com cursor e placar -->
+        <a-camera position="0 1.6 0">
+            <!-- Cursor -->
+            <a-entity 
+                cursor="fuse: true; fuseTimeout: 500"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                material="color: white; shader: flat"
+                animation__fusing="property: scale; startEvents: fusing; dur: 500; from: 1 1 1; to: 0.3 0.3 0.3"
+                animation__leave="property: scale; startEvents: mouseleave; dur: 200; to: 1 1 1"
+                raycaster="objects: .alvo">
+            </a-entity>
+
+            <!-- Placar -->
+            <a-text 
+                id="placar"
+                value="Pontos: 0 / 10"
+                position="0 0.4 -1"
+                align="center"
+                width="2"
+                color="white">
+            </a-text>
+
+            <!-- Mensagem de vitória (inicialmente invisível) -->
+            <a-text 
+                id="vitoria"
+                value="VOCE VENCEU!"
+                position="0 0 -1.5"
+                align="center"
+                width="4"
+                color="#FFD700"
+                visible="false">
+            </a-text>
+        </a-camera>
+
+        <!-- Container dos alvos -->
+        <a-entity id="alvos"></a-entity>
+
+        <!-- Plano (chão) -->
+        <a-plane 
+            position="0 0 -4" 
+            rotation="-90 0 0" 
+            width="20" 
+            height="20" 
+            color="#2E7D32">
+        </a-plane>
+
+        <!-- Céu -->
+        <a-sky color="#1A237E"></a-sky>
+
+        <!-- Iluminação -->
+        <a-light type="ambient" color="#444"></a-light>
+        <a-light type="directional" position="1 4 1" intensity="0.8"></a-light>
+    </a-scene>
+
+    <script>
+        let pontos = 0;
+        let jogoAtivo = true;
+        const placar = document.querySelector('#placar');
+        const vitoria = document.querySelector('#vitoria');
+        const alvosContainer = document.querySelector('#alvos');
+        const cores = ['#E91E63', '#FF5722', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'];
+        const formas = ['box', 'sphere', 'cone', 'dodecahedron'];
+
+        // Cria um alvo em posição aleatória
+        function criarAlvo() {
+            if (!jogoAtivo) return;
+
+            const forma = formas[Math.floor(Math.random() * formas.length)];
+            const cor = cores[Math.floor(Math.random() * cores.length)];
+            
+            // Posição aleatória
+            const x = (Math.random() - 0.5) * 8;  // -4 a 4
+            const y = 1 + Math.random() * 2;      // 1 a 3
+            const z = -3 - Math.random() * 5;     // -3 a -8
+
+            const alvo = document.createElement('a-entity');
+            alvo.setAttribute('class', 'alvo');
+            alvo.setAttribute('geometry', `primitive: ${forma}; radius: 0.3`);
+            alvo.setAttribute('material', `color: ${cor}`);
+            alvo.setAttribute('position', `${x} ${y} ${z}`);
+            alvo.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 3000');
+
+            // Evento de clique (acerto)
+            alvo.addEventListener('click', function() {
+                if (!jogoAtivo) return;
+                
+                // Remove o alvo
+                this.parentNode.removeChild(this);
+                
+                // Adiciona ponto
+                pontos++;
+                placar.setAttribute('value', 'Pontos: ' + pontos + ' / 10');
+
+                // Verifica vitória
+                if (pontos >= 10) {
+                    jogoAtivo = false;
+                    vitoria.setAttribute('visible', 'true');
+                    placar.setAttribute('value', 'PARABENS! 10 pontos!');
+                } else {
+                    // Cria novo alvo
+                    criarAlvo();
+                }
+            });
+
+            alvosContainer.appendChild(alvo);
+        }
+
+        // Inicia com 3 alvos
+        for (let i = 0; i < 3; i++) {
+            criarAlvo();
+        }
+    </script>
+</body>
+</html>
+

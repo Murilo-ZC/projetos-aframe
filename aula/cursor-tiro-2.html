@@ -8,20 +8,21 @@
 </head>
 <body>
     <a-scene>
-        <!-- Câmera com cursor e UI -->
+        <!-- Câmera com cursor -->
         <a-camera position="0 1.6 0">
             <!-- Cursor -->
             <a-entity 
+                id="cursor"
                 cursor="fuse: true; fuseTimeout: 400"
                 position="0 0 -1"
                 geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
                 material="color: white; shader: flat"
                 animation__fusing="property: scale; startEvents: fusing; dur: 400; from: 1 1 1; to: 0.3 0.3 0.3"
                 animation__leave="property: scale; startEvents: mouseleave; dur: 200; to: 1 1 1"
-                raycaster="objects: .clicavel">
+                raycaster="objects: .clicavel; autoRefresh: true">
             </a-entity>
 
-            <!-- Placar -->
+            <!-- Placar (acompanha a câmera) -->
             <a-text 
                 id="placar"
                 value=""
@@ -30,57 +31,61 @@
                 width="2"
                 color="white">
             </a-text>
-
-            <!-- Tela de início -->
-            <a-entity id="telaInicio">
-                <a-text 
-                    value="JOGO DE TIRO"
-                    position="0 0.15 -1.5"
-                    align="center"
-                    width="3"
-                    color="#FFD700">
-                </a-text>
-                <a-entity
-                    id="btnIniciar"
-                    class="clicavel"
-                    geometry="primitive: plane; width: 0.6; height: 0.15"
-                    material="color: #4CAF50"
-                    position="0 -0.05 -1.5">
-                    <a-text 
-                        value="INICIAR"
-                        position="0 0 0.01"
-                        align="center"
-                        width="2"
-                        color="white">
-                    </a-text>
-                </a-entity>
-            </a-entity>
-
-            <!-- Tela de vitória -->
-            <a-entity id="telaVitoria" visible="false">
-                <a-text 
-                    value="VOCE VENCEU!"
-                    position="0 0.15 -1.5"
-                    align="center"
-                    width="3"
-                    color="#FFD700">
-                </a-text>
-                <a-entity
-                    id="btnReiniciar"
-                    class="clicavel"
-                    geometry="primitive: plane; width: 0.6; height: 0.15"
-                    material="color: #2196F3"
-                    position="0 -0.05 -1.5">
-                    <a-text 
-                        value="JOGAR NOVAMENTE"
-                        position="0 0 0.01"
-                        align="center"
-                        width="2"
-                        color="white">
-                    </a-text>
-                </a-entity>
-            </a-entity>
         </a-camera>
+
+        <!-- Tela de início (no mundo 3D, em frente ao jogador) -->
+        <a-entity id="telaInicio" position="0 1.6 -3">
+            <a-text 
+                value="JOGO DE TIRO"
+                position="0 0.5 0"
+                align="center"
+                width="6"
+                color="#FFD700">
+            </a-text>
+            <a-box
+                id="btnIniciar"
+                class="clicavel"
+                width="1.2"
+                height="0.4"
+                depth="0.1"
+                color="#4CAF50"
+                position="0 0 0">
+            </a-box>
+            <a-text 
+                value="INICIAR"
+                position="0 0 0.06"
+                align="center"
+                width="4"
+                color="white">
+            </a-text>
+        </a-entity>
+
+        <!-- Tela de vitória (no mundo 3D) -->
+        <a-entity id="telaVitoria" position="0 1.6 -3" visible="false">
+            <a-text 
+                value="VOCE VENCEU!"
+                position="0 0.5 0"
+                align="center"
+                width="6"
+                color="#FFD700">
+            </a-text>
+            <a-box
+                id="btnReiniciar"
+                class="clicavel"
+                width="1.5"
+                height="0.4"
+                depth="0.1"
+                color="#2196F3"
+                position="0 0 0">
+            </a-box>
+            <a-text 
+                value="JOGAR NOVAMENTE"
+                position="0 0 0.06"
+                align="center"
+                width="4"
+                color="white">
+            </a-text>
+        </a-entity>
 
         <!-- Container dos alvos -->
         <a-entity id="alvos"></a-entity>
@@ -113,6 +118,7 @@
         const btnIniciar = document.querySelector('#btnIniciar');
         const btnReiniciar = document.querySelector('#btnReiniciar');
         const alvosContainer = document.querySelector('#alvos');
+        const cursorEl = document.querySelector('#cursor');
 
         const cores = ['#E91E63', '#FF5722', '#FFEB3B', '#4CAF50', '#2196F3', '#9C27B0'];
         const formas = ['box', 'sphere', 'cone', 'dodecahedron'];
@@ -165,6 +171,9 @@
             });
 
             alvosContainer.appendChild(alvo);
+            
+            // Força o raycaster a atualizar para detectar o novo alvo
+            cursorEl.components.raycaster.refreshObjects();
         }
 
         // Inicia o jogo
@@ -205,4 +214,3 @@
     </script>
 </body>
 </html>
-

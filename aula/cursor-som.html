@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teste de Microfone com A-Frame</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+    <style>
+      #volumeBar {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 0px;
+        height: 20px;
+        background: limegreen;
+        transition: width 0.1s linear;
+      }
+
+      #label {
+        position: absolute;
+        top: 50px;
+        left: 20px;
+        font-size: 18px;
+        color: white;
+        font-family: Arial;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Barra visual do volume -->
+    <div id="volumeBar"></div>
+    <div id="label">Intensidade: 0%</div>
+
+    <a-scene>
+      <a-entity id="mic" mic-level-listener></a-entity>
+
+      <a-box id="box" position="0 1.5 -3" color="red" scale="1 1 1"></a-box>
+
+      <a-sky color="#333"></a-sky>
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent("mic-level-listener", {
+        init: function () {
+          this.volume = 0;
+
+          navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then((stream) => {
+              this.audioContext = new (window.AudioContext ||
+                window.webkitAudioContext)();
+              this.analyser = this.audioContext.createAnalyser();
+              this.analyser.fftSize = 512;
+
+              this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+
+              const source =
+                this.audioContext.createMediaStreamSource(stream);
+              source.connect(this.analyser);
+            })
+            .catch((err) => {
+              console.error("Erro ao acessar o microfone:", err);
+            });
+        },
+
+        tick: function () {
+          if (!this.analyser) return;
+
+          this.analyser.getByteFrequencyData(this.dataArray);
+
+          let sum = 0;
+          for (let i = 0; i < this.dataArray.length; i++) {
+            sum += this.dataArray[i];
+          }
+
+          let avg = sum / this.dataArray.length;
+          let normalized = avg / 255;
+
+          this.volume =
+            0.8 * this.volume + 0.2 * normalized; // suavização
+
+          // Atualiza barra no HTML
+          const bar = document.getElementById("volumeBar");
+          const label = document.getElementById("label");
+
+          const percent = Math.round(this.volume * 100);
+
+          bar.style.width = percent * 3 + "px";
+          label.innerText = `Intensidade: ${percent}%`;
+
+          // Anima o cubo no A-Frame
+          const box = document.getElementById("box");
+          const scaleVal = 1 + this.volume * 2; // 1 a 3
+          box.setAttribute("scale", `${scaleVal} ${scaleVal} ${scaleVal}`);
+        },
+      });
+    </script>
+  </body>
+</html>

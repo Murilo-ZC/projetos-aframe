@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teste de Grito com A-Frame</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #111;
+        font-family: Arial, sans-serif;
+      }
+
+      #resetBtn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 8px 16px;
+        font-size: 14px;
+        cursor: pointer;
+        border-radius: 4px;
+        border: none;
+      }
+
+      #volumeBar {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 0px;
+        height: 18px;
+        background: limegreen;
+        transition: width 0.1s linear;
+      }
+
+      #label,
+      #bestLabel,
+      #statusLabel {
+        position: absolute;
+        left: 20px;
+        color: white;
+        font-size: 14px;
+      }
+
+      #label {
+        top: 45px;
+      }
+
+      #bestLabel {
+        top: 65px;
+      }
+
+      #statusLabel {
+        top: 85px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <button id="resetBtn">Reiniciar</button>
+    <div id="volumeBar"></div>
+    <div id="label">Intensidade atual: 0%</div>
+    <div id="bestLabel">Melhor até agora: 0%</div>
+    <div id="statusLabel">Status: aguardando grito...</div>
+
+    <a-scene>
+      <a-assets>
+        <!-- 6 assets simples (placeholders coloridos) -->
+        <img id="asset1" src="https://via.placeholder.com/256/333333/ffffff?text=Nivel+1" />
+        <img id="asset2" src="https://via.placeholder.com/256/2255ff/ffffff?text=Nivel+2" />
+        <img id="asset3" src="https://via.placeholder.com/256/22aa55/ffffff?text=Nivel+3" />
+        <img id="asset4" src="https://via.placeholder.com/256/aaaa22/ffffff?text=Nivel+4" />
+        <img id="asset5" src="https://via.placeholder.com/256/ff8822/ffffff?text=Nivel+5" />
+        <img id="asset6" src="https://via.placeholder.com/256/ff2222/ffffff?text=Nivel+6" />
+      </a-assets>
+
+      <!-- Entidade com o componente que mede e controla tudo -->
+      <a-entity id="micEntity" mic-shout-meter></a-entity>
+
+      <!-- Objeto que troca de asset conforme o grito -->
+      <a-box id="targetObject"
+             position="0 1.5 -3"
+             depth="1"
+             height="1"
+             width="1"
+             material="src: #asset1">
+      </a-box>
+
+      <a-sky color="#222"></a-sky>
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent("mic-shout-meter", {
+        schema: {
+          threshold: { type: "number", default: 0.2 }, // volume mínimo para começar a medir grito
+          holdTimeMs: { type: "number", default: 5000 } // 5 segundos
+        },
+
+        init: function () {
+          // Estado interno
+          this.volume = 0;
+          this.isHolding = false;
+          this.holdStart = 0;
+          this.holdEnd = 0;
+          this.peakVolumeInHold = 0;
+
+          this.bestVolumeEver = 0;
+          this.bestAssetIndex = 0;
+
+          // Referências de DOM
+          this.bar = document.getElementById("volumeBar");
+          this.label = document.getElementById("label");
+          this.bestLabel = document.getElementById("bestLabel");
+          this.statusLabel = document.getElementById("statusLabel");
+          this.targetObject = document.getElementById("targetObject");
+
+          // Captura do microfone
+          navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then((stream) => {
+              this.audioContext = new (window.AudioContext ||
+                window.webkitAudioContext)();
+              this.analyser = this.audioContext.createAnalyser();
+              this.analyser.fftSize = 512;
+              this.dataArray = new Uint8Array(
+                this.analyser.frequencyBinCount
+              );
+
+              const source =
+                this.audioContext.createMediaStreamSource(stream);
+              source.connect(this.analyser);
+
+              this.statusLabel.innerText =
+                "Status: microfone pronto, grite para começar!";
+            })
+            .catch((err) => {
+              console.error("Erro ao acessar o microfone:", err);
+              this.statusLabel.innerText =
+                "Status: erro ao acessar microfone (veja o console).";
+            });
+
+          // Expor função de reset para o botão
+          const self = this;
+          document
+            .getElementById("resetBtn")
+            .addEventListener("click", function () {
+              self.resetMeter();
+            });
+        },
+
+        // Converte volume (0–1) em índice de asset 0–5
+        volumeToIndex: function (v) {
+          const clamped = Math.max(0, Math.min(1, v));
+          return Math.min(5, Math.floor(clamped * 6)); // 6 níveis (0,1,2,3,4,5)
+        },
+
+        // Atualiza o asset do objeto
+        setAssetByIndex: function (index) {
+          const assetId = "#asset" + (index + 1); // asset1..asset6
+          if (this.targetObject) {
+            this.targetObject.setAttribute("material", "src", assetId);
+
+            // só pra dar um feedback visual extra, aumenta um pouco o tamanho
+            const base = 0.7 + index * 0.15;
+            this.targetObject.setAttribute(
+              "scale",
+              `${base} ${base} ${base}`
+            );
+          }
+        },
+
+        // Reset externo (botão)
+        resetMeter: function () {
+          this.isHolding = false;
+          this.peakVolumeInHold = 0;
+          this.bestVolumeEver = 0;
+          this.bestAssetIndex = 0;
+          this.setAssetByIndex(0);
+
+          this.bar.style.width = "0px";
+          this.label.innerText = "Intensidade atual: 0%";
+          this.bestLabel.innerText = "Melhor até agora: 0%";
+          this.statusLabel.innerText =
+            "Status: reiniciado, aguardando grito...";
+        },
+
+        tick: function () {
+          if (!this.analyser) return;
+
+          // Lê o áudio atual
+          this.analyser.getByteFrequencyData(this.dataArray);
+          let sum = 0;
+          for (let i = 0; i < this.dataArray.length; i++) {
+            sum += this.dataArray[i];
+          }
+          let avg = sum / this.dataArray.length;
+          let normalized = avg / 255;
+
+          // Suavização simples
+          this.volume = 0.8 * this.volume + 0.2 * normalized;
+
+          const percent = Math.round(this.volume * 100);
+          this.bar.style.width = percent * 3 + "px";
+          this.label.innerText = `Intensidade atual: ${percent}%`;
+
+          const now = Date.now();
+
+          if (!this.isHolding) {
+            // Fora de "medição de grito": mostra sempre o menor asset
+            this.setAssetByIndex(0);
+
+            // Se passar do limiar, inicia janela de 5s
+            if (this.volume > this.data.threshold) {
+              this.isHolding = true;
+              this.holdStart = now;
+              this.holdEnd = now + this.data.holdTimeMs;
+              this.peakVolumeInHold = this.volume;
+
+              this.statusLabel.innerText =
+                "Status: medindo grito por 5 segundos...";
+            }
+          } else {
+            // Durante a janela de 5s, registramos o pico
+            if (this.volume > this.peakVolumeInHold) {
+              this.peakVolumeInHold = this.volume;
+            }
+
+            const peakPercent = Math.round(this.peakVolumeInHold * 100);
+            const index = this.volumeToIndex(this.peakVolumeInHold);
+            this.setAssetByIndex(index);
+
+            this.statusLabel.innerText =
+              "Status: medindo... pico desta rodada: " +
+              peakPercent +
+              "%";
+
+            // Terminou os 5 segundos
+            if (now >= this.holdEnd) {
+              this.isHolding = false;
+
+              // Atualiza o melhor de todos
+              if (this.peakVolumeInHold > this.bestVolumeEver) {
+                this.bestVolumeEver = this.peakVolumeInHold;
+                this.bestAssetIndex = this.volumeToIndex(
+                  this.bestVolumeEver
+                );
+              }
+
+              const bestPercent = Math.round(
+                this.bestVolumeEver * 100
+              );
+              this.bestLabel.innerText =
+                "Melhor até agora: " + bestPercent + "%";
+
+              // Mantém o melhor asset global visível ao final da rodada
+              this.setAssetByIndex(this.bestAssetIndex);
+
+              this.statusLabel.innerText =
+                "Status: rodada concluída! Clique em Reiniciar para tentar de novo ou grite novamente.";
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

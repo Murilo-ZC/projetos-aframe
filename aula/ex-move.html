@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Locomotion - Movimento Livre</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+      #hud {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        border-radius: 4px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="hud">
+      <strong>Movimento Livre</strong><br>
+      WASD ou setas para mover<br>
+      Mouse para olhar ao redor
+    </div>
+
+    <a-scene>
+      <!-- Câmera com movimento livre usando wasd-controls -->
+      <a-camera id="camera" position="0 1.6 0" look-controls wasd-controls="enabled: true">
+        <a-cursor></a-cursor>
+      </a-camera>
+
+      <!-- Objetos de referência no ambiente -->
+      <a-box position="0 0.5 -5" width="2" height="1" depth="2" color="#4CAF50"></a-box>
+      <a-sphere position="3 1 -7" radius="0.5" color="#2196F3"></a-sphere>
+      <a-cylinder position="-3 0.75 -6" radius="0.5" height="1.5" color="#FF5722"></a-cylinder>
+      <a-box position="5 0.5 -3" width="1" height="1" depth="1" color="#9C27B0"></a-box>
+      <a-sphere position="-5 0.5 -8" radius="0.4" color="#FFC107"></a-sphere>
+
+      <!-- Ambiente -->
+      <a-plane 
+        position="0 0 -4" 
+        rotation="-90 0 0" 
+        width="30" 
+        height="30" 
+        color="#7BC8A4">
+      </a-plane>
+
+      <a-sky color="#87CEEB"></a-sky>
+
+      <a-light type="ambient" color="#404040"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="0.6"></a-light>
+    </a-scene>
+  </body>
+</html>
+

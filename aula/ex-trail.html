@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rail System - Sistema de Trilho</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  </head>
+
+  <body>
+    <a-scene>
+      <!-- Câmera -->
+      <a-camera id="camera" position="0 1.6 0" look-controls>
+        <a-cursor raycaster="objects: #start-btn, #restart-btn"></a-cursor>
+      </a-camera>
+
+      <!-- Botão para iniciar o trilho -->
+      <a-box 
+        id="start-btn"
+        position="0 1.5 -2"
+        width="1"
+        height="0.5"
+        depth="0.1"
+        color="#4CAF50">
+        <a-text 
+          value="Iniciar" 
+          position="0 0 0.06" 
+          align="center"
+          color="white">
+        </a-text>
+      </a-box>
+
+      <!-- Botão para reiniciar (inicialmente invisível) -->
+      <a-box 
+        id="restart-btn"
+        position="0 1.5 -13"
+        width="1.2"
+        height="0.5"
+        depth="0.1"
+        color="#2196F3"
+        visible="false">
+        <a-text 
+          value="Reiniciar" 
+          position="0 0 0.06" 
+          align="center"
+          color="white">
+        </a-text>
+      </a-box>
+
+      <!-- Esferas nos pontos de parada -->
+      <a-sphere position="0 0.5 0" radius="0.2" color="#4CAF50"></a-sphere>
+      <a-sphere position="3 0.5 -5" radius="0.2" color="#FF9800"></a-sphere>
+      <a-sphere position="6 0.5 -8" radius="0.2" color="#FF9800"></a-sphere>
+      <a-sphere position="3 0.5 -11" radius="0.2" color="#FF9800"></a-sphere>
+      <a-sphere position="0 0.5 -14" radius="0.2" color="#FF9800"></a-sphere>
+
+      <!-- Ambiente mínimo -->
+      <a-plane 
+        position="0 0 -5" 
+        rotation="-90 0 0" 
+        width="20" 
+        height="20" 
+        color="#7BC8A4">
+      </a-plane>
+
+      <a-sky color="#87CEEB"></a-sky>
+
+      <script>
+        // Componente de movimento em trilho - versão mínima
+        AFRAME.registerComponent('rail-movement', {
+          init: function() {
+            this.camera = document.querySelector('#camera');
+            
+            // Pontos do trilho (caminho)
+            this.railPoints = [
+              {x: 0, y: 1.6, z: 0},      // Ponto inicial
+              {x: 3, y: 1.6, z: -5},     // Ponto 1
+              {x: 6, y: 1.6, z: -8},     // Ponto 2
+              {x: 3, y: 1.6, z: -11},    // Ponto 3
+              {x: 0, y: 1.6, z: -14}     // Ponto final
+            ];
+            
+            this.currentPoint = 0;
+            this.isMoving = false;
+          },
+          
+          moveToNext: function() {
+            // Não move se já está se movendo ou chegou ao fim
+            if (this.isMoving || this.currentPoint >= this.railPoints.length - 1) {
+              // Se chegou ao fim, mostra o botão de reiniciar
+              if (this.currentPoint >= this.railPoints.length - 1) {
+                const restartBtn = document.querySelector('#restart-btn');
+                if (restartBtn) {
+                  restartBtn.setAttribute('visible', 'true');
+                }
+              }
+              return;
+            }
+            
+            this.isMoving = true;
+            this.currentPoint++;
+            const target = this.railPoints[this.currentPoint];
+            
+            // Move a câmera para o próximo ponto
+            this.camera.setAttribute('animation', {
+              property: 'position',
+              to: `${target.x} ${target.y} ${target.z}`,
+              dur: 3000,
+              easing: 'easeInOutQuad'
+            });
+            
+            // Quando a animação termina, move automaticamente para o próximo ponto
+            this.camera.addEventListener('animationcomplete', () => {
+              this.isMoving = false;
+              
+              // Verifica se chegou ao fim antes de continuar
+              if (this.currentPoint >= this.railPoints.length - 1) {
+                // Chegou ao fim, mostra o botão de reiniciar
+                const restartBtn = document.querySelector('#restart-btn');
+                if (restartBtn) {
+                  restartBtn.setAttribute('visible', 'true');
+                  console.log('Botão de reiniciar mostrado');
+                } else {
+                  console.log('Botão de reiniciar não encontrado');
+                }
+                return;
+              }
+              
+              // Continua automaticamente para o próximo ponto
+              this.moveToNext();
+            }, { once: true });
+          },
+          
+          reset: function() {
+            // Reseta para o ponto inicial
+            this.currentPoint = 0;
+            this.isMoving = false;
+            const startPos = this.railPoints[0];
+            this.camera.setAttribute('position', {
+              x: startPos.x,
+              y: startPos.y,
+              z: startPos.z
+            });
+            // Esconde o botão de reiniciar
+            const restartBtn = document.querySelector('#restart-btn');
+            if (restartBtn) {
+              restartBtn.setAttribute('visible', 'false');
+            }
+            // Esconde o botão de iniciar (já que já iniciou antes)
+            const startBtn = document.querySelector('#start-btn');
+            if (startBtn) {
+              startBtn.setAttribute('visible', 'false');
+            }
+          },
+          
+          start: function() {
+            // Inicia o movimento se estiver no ponto inicial
+            if (this.currentPoint === 0) {
+              // Esconde o botão de iniciar
+              const startBtn = document.querySelector('#start-btn');
+              if (startBtn) {
+                startBtn.setAttribute('visible', 'false');
+              }
+              this.moveToNext();
+            }
+          }
+        });
+
+        // Adicionar componente à câmera
+        document.querySelector('#camera').setAttribute('rail-movement', '');
+        
+        // Iniciar trilho ao clicar no botão
+        document.querySelector('#start-btn').addEventListener('click', () => {
+          document.querySelector('#camera').components['rail-movement'].start();
+        });
+        
+        // Reiniciar trilho ao clicar no botão de reiniciar
+        document.querySelector('#restart-btn').addEventListener('click', () => {
+          const railComponent = document.querySelector('#camera').components['rail-movement'];
+          railComponent.reset();
+          // Mostra o botão de iniciar novamente
+          const startBtn = document.querySelector('#start-btn');
+          if (startBtn) {
+            startBtn.setAttribute('visible', 'true');
+          }
+        });
+      </script>
+    </a-scene>
+  </body>
+</html>
+

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Warp System - Teleportação Direta</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+      #hud {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        border-radius: 4px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="hud">
+      <strong>Como usar:</strong><br>
+      <strong>🖱️ Mouse:</strong> Arraste para mover a câmera, clique quando o cursor estiver sobre um portal<br>
+      <strong>📱 Mobile VR:</strong> Olhe para um portal por 1 segundo (o cursor encolhe durante o fuse)
+    </div>
+
+    <a-scene>
+      <!-- Câmera com look-controls para mouse e cursor para interação -->
+      <a-camera id="camera" position="0 1.6 0" look-controls>
+        <!-- Cursor que funciona com clique imediato (mouse) e fuse (mobile) -->
+        <a-entity 
+          cursor="fuse: true; fuseTimeout: 1000"
+          position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: #00D4FF; shader: flat"
+          animation__fusing="property: scale; startEvents: fusing; dur: 1000; from: 1 1 1; to: 0.3 0.3 0.3"
+          animation__mouseleave="property: scale; startEvents: mouseleave; dur: 200; to: 1 1 1"
+          animation__click="property: scale; startEvents: click; dur: 150; from: 1 1 1; to: 0.8 0.8 0.8"
+          raycaster="objects: .warp-portal; far: 20">
+        </a-entity>
+      </a-camera>
+
+      <!-- Portais de Warp -->
+      <!-- Portal 1 - Entrada -->
+      <a-entity id="warp-portal-1" class="warp-portal" position="0 0.5 -3">
+        <!-- Anel externo rotacionando -->
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#FF5722"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <!-- Anel interno rotacionando em direção oposta -->
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#FF8A65"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <!-- Centro do portal -->
+        <a-circle 
+          radius="0.2" 
+          color="#FFAB91"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <!-- Label -->
+        <a-text 
+          value="ENTRADA" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Portal 2 - Norte -->
+      <a-entity id="warp-portal-2" class="warp-portal" position="4 0.5 -6">
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#2196F3"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#64B5F6"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <a-circle 
+          radius="0.2" 
+          color="#90CAF9"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <a-text 
+          value="NORTE" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Portal 3 - Sul -->
+      <a-entity id="warp-portal-3" class="warp-portal" position="-4 0.5 -6">
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#4CAF50"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#81C784"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <a-circle 
+          radius="0.2" 
+          color="#A5D6A7"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <a-text 
+          value="SUL" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Portal 4 - Leste -->
+      <a-entity id="warp-portal-4" class="warp-portal" position="5 0.5 -2">
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#9C27B0"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#BA68C8"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <a-circle 
+          radius="0.2" 
+          color="#CE93D8"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <a-text 
+          value="LESTE" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Portal 5 - Oeste -->
+      <a-entity id="warp-portal-5" class="warp-portal" position="-5 0.5 -2">
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#FF9800"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#FFB74D"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <a-circle 
+          radius="0.2" 
+          color="#FFCC80"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <a-text 
+          value="OESTE" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Portal 6 - Centro Distante -->
+      <a-entity id="warp-portal-6" class="warp-portal" position="0 0.5 -9">
+        <a-ring 
+          radius-inner="0.4" 
+          radius-outer="0.5" 
+          color="#00BCD4"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 360 0; loop: true; dur: 3000">
+        </a-ring>
+        <a-ring 
+          radius-inner="0.2" 
+          radius-outer="0.3" 
+          color="#4DD0E1"
+          rotation="-90 0 0"
+          animation__rotate="property: rotation; to: -90 -360 0; loop: true; dur: 2000">
+        </a-ring>
+        <a-circle 
+          radius="0.2" 
+          color="#80DEEA"
+          rotation="-90 0 0"
+          opacity="0.5">
+        </a-circle>
+        <a-text 
+          value="CENTRO" 
+          position="0 0.8 0" 
+          align="center"
+          color="white"
+          scale="0.8 0.8 0.8">
+        </a-text>
+      </a-entity>
+
+      <!-- Objetos de referência no ambiente -->
+      <a-box position="2 0.5 -4" width="0.5" height="1" depth="0.5" color="#E91E63"></a-box>
+      <a-sphere position="-2 0.5 -4" radius="0.3" color="#FFC107"></a-sphere>
+      <a-cylinder position="0 0.75 -7" radius="0.3" height="1.5" color="#3F51B5"></a-cylinder>
+
+      <!-- Ambiente -->
+      <a-plane 
+        position="0 0 -4" 
+        rotation="-90 0 0" 
+        width="30" 
+        height="30" 
+        color="#7BC8A4">
+      </a-plane>
+
+      <a-sky color="#87CEEB"></a-sky>
+
+      <a-light type="ambient" color="#404040"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="0.6"></a-light>
+
+      <script>
+        // Componente de destino de warp
+        AFRAME.registerComponent('warp-destination', {
+          init: function() {
+            this.camera = document.querySelector('#camera');
+            this.targetPosition = this.el.getAttribute('position');
+            this.rings = this.el.querySelectorAll('a-ring');
+            this.circle = this.el.querySelector('a-circle');
+            // Salvar cor original do círculo para restaurar depois
+            if (this.circle) {
+              this.originalCircleColor = this.circle.getAttribute('material').color;
+            }
+            
+            // Efeito hover - portal aumenta e brilha
+            this.el.addEventListener('mouseenter', () => {
+              this.el.setAttribute('animation', {
+                property: 'scale',
+                to: '1.2 1.2 1.2',
+                dur: 300,
+                easing: 'easeOutQuad'
+              });
+              // Brilho no círculo central
+              if (this.circle) {
+                this.circle.setAttribute('opacity', '0.8');
+              }
+            });
+            
+            this.el.addEventListener('mouseleave', () => {
+              this.el.setAttribute('animation', {
+                property: 'scale',
+                to: '1 1 1',
+                dur: 300,
+                easing: 'easeOutQuad'
+              });
+              if (this.circle) {
+                this.circle.setAttribute('opacity', '0.5');
+              }
+            });
+            
+            // Função de teleportação
+            this.teleport = () => {
+              const cameraPos = this.camera.getAttribute('position');
+              
+              // Efeito visual antes do warp - portal expande e brilha
+              this.el.setAttribute('animation', {
+                property: 'scale',
+                to: '1.5 1.5 1.5',
+                dur: 200,
+                easing: 'easeOutQuad'
+              });
+              
+              if (this.circle) {
+                this.circle.setAttribute('opacity', '1');
+                this.circle.setAttribute('color', '#FFFFFF');
+              }
+              
+              // Efeito de "flash" na câmera durante a teleportação
+              const flash = document.createElement('a-plane');
+              flash.setAttribute('position', '0 0 -0.5');
+              flash.setAttribute('rotation', '0 0 0');
+              flash.setAttribute('width', '10');
+              flash.setAttribute('height', '10');
+              flash.setAttribute('material', 'color: white; opacity: 0.9');
+              flash.setAttribute('animation', 'property: material.opacity; to: 0; dur: 300');
+              this.camera.appendChild(flash);
+              
+              setTimeout(() => {
+                // Teleportação instantânea
+                this.camera.setAttribute('position', {
+                  x: this.targetPosition.x,
+                  y: cameraPos.y, // Mantém altura do usuário
+                  z: this.targetPosition.z
+                });
+                
+                // Reset do portal
+                setTimeout(() => {
+                  this.el.setAttribute('scale', '1 1 1');
+                  if (this.circle && this.originalCircleColor) {
+                    this.circle.setAttribute('opacity', '0.5');
+                    this.circle.setAttribute('color', this.originalCircleColor);
+                  }
+                  if (flash.parentNode) {
+                    flash.parentNode.removeChild(flash);
+                  }
+                }, 100);
+              }, 200);
+            };
+            
+            // Teleportação ao clicar ou quando o fuse completa
+            // O A-Frame dispara automaticamente um evento 'click' no objeto quando o fuse completa
+            // Então este listener funciona tanto para clique real quanto para gaze (fuse)
+            this.el.addEventListener('click', this.teleport);
+          }
+        });
+        
+        // O cursor com fuse: true funciona assim:
+        // - Com mouse: clique direto dispara o evento 'click' imediatamente no objeto interceptado
+        // - Com mobile VR: olhar por 1 segundo (fuseTimeout) dispara o evento 'click' automaticamente
+        // Ambos os métodos usam o mesmo listener de 'click', então funciona perfeitamente!
+
+        // Adicionar componente aos portais após a cena carregar
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+          document.querySelectorAll('.warp-portal').forEach(el => {
+            el.setAttribute('warp-destination', '');
+          });
+        });
+      </script>
+    </a-scene>
+  </body>
+</html>
+

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gaze-based Teleportation - Deslocamento por Olhar</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+      #hud {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        border-radius: 4px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="hud">
+      Olhe para as esferas coloridas por 2 segundos para se teleportar
+    </div>
+
+    <a-scene>
+      <!-- Câmera com cursor para gaze-based teleportation -->
+      <a-camera position="0 1.6 0">
+        <!-- Cursor com sistema de fuse ativado -->
+        <a-entity 
+          cursor="fuse: true; fuseTimeout: 2000"
+          position="0 0 -1"
+          geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+          material="color: white; shader: flat"
+          animation__fusing="property: scale; startEvents: fusing; dur: 2000; from: 1 1 1; to: 0.3 0.3 0.3"
+          animation__mouseleave="property: scale; startEvents: mouseleave; dur: 200; to: 1 1 1"
+          raycaster="objects: .teleport-target">
+        </a-entity>
+      </a-camera>
+
+      <!-- Pontos de teleportação -->
+      <!-- Ponto 1 - Verde -->
+      <a-sphere 
+        class="teleport-target"
+        position="0 0.5 -3"
+        radius="0.3"
+        color="#4CAF50"
+        animation__pulse="property: scale; to: 1.2 1.2 1.2; loop: true; dur: 1000; dir: alternate">
+      </a-sphere>
+
+      <!-- Ponto 2 - Azul -->
+      <a-sphere 
+        class="teleport-target"
+        position="3 0.5 -5"
+        radius="0.3"
+        color="#2196F3"
+        animation__pulse="property: scale; to: 1.2 1.2 1.2; loop: true; dur: 1000; dir: alternate">
+      </a-sphere>
+
+      <!-- Ponto 3 - Vermelho -->
+      <a-sphere 
+        class="teleport-target"
+        position="-3 0.5 -6"
+        radius="0.3"
+        color="#F44336"
+        animation__pulse="property: scale; to: 1.2 1.2 1.2; loop: true; dur: 1000; dir: alternate">
+      </a-sphere>
+
+      <!-- Ponto 4 - Roxo -->
+      <a-sphere 
+        class="teleport-target"
+        position="0 0.5 -8"
+        radius="0.3"
+        color="#9C27B0"
+        animation__pulse="property: scale; to: 1.2 1.2 1.2; loop: true; dur: 1000; dir: alternate">
+      </a-sphere>
+
+      <!-- Ambiente -->
+      <a-plane 
+        position="0 0 -4" 
+        rotation="-90 0 0" 
+        width="20" 
+        height="20" 
+        color="#7BC8A4">
+      </a-plane>
+
+      <a-sky color="#87CEEB"></a-sky>
+
+      <a-light type="ambient" color="#404040"></a-light>
+      <a-light type="directional" position="0 5 5" intensity="0.5"></a-light>
+
+      <script>
+        // Componente para teleportação ao olhar (gaze-based teleportation)
+        AFRAME.registerComponent('gaze-teleport', {
+          init: function() {
+            this.camera = document.querySelector('a-camera');
+            this.originalColor = this.el.getAttribute('material').color;
+            
+            // Quando o fuse completa, o A-Frame dispara um evento 'click' no objeto interceptado
+            // Este evento é disparado automaticamente quando o fuse termina
+            this.el.addEventListener('click', () => {
+              const targetPos = this.el.getAttribute('position');
+              const cameraPos = this.camera.getAttribute('position');
+              
+              // Feedback visual - piscar o objeto
+              this.el.setAttribute('material', 'color', '#FFFFFF');
+              setTimeout(() => {
+                this.el.setAttribute('material', 'color', this.originalColor);
+              }, 200);
+              
+              // Transporta a câmera para a posição do alvo
+              // Mantém a altura Y da câmera (altura do usuário)
+              this.camera.setAttribute('position', {
+                x: targetPos.x,
+                y: cameraPos.y, // Mantém altura do usuário
+                z: targetPos.z
+              });
+            });
+          }
+        });
+
+        // Adicionar componente aos alvos de teleportação após a cena carregar
+        document.querySelector('a-scene').addEventListener('loaded', () => {
+          document.querySelectorAll('.teleport-target').forEach(el => {
+            el.setAttribute('gaze-teleport', '');
+          });
+        });
+      </script>
+    </a-scene>
+  </body>
+</html>
